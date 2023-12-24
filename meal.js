@@ -8,7 +8,9 @@
 //https://www.themealdb.com/api/json/v1/1/search.php?s=
 
 const mealsElement = document.getElementById('meals');
+const favoritesElement = document.querySelector('.favorites');
 getRandomMeal();
+updateFavoriteMeals();
 
 async function getRandomMeal()
 {
@@ -17,10 +19,9 @@ async function getRandomMeal()
     const randomData =await resp.json();
    
     const randomMeal = randomData.meals[0];
+    console.log(randomMeal);
 
-
-    mealsElement.innerHTML = '';
-
+    mealsElement.innerHTML = "";
     addMeal(randomMeal);   
 }
 
@@ -28,6 +29,7 @@ function addMeal(mealData)
 {
     const meal = document.createElement("div");
     meal.classList.add("meal");
+
     meal.innerHTML = ` <div class="meal-header">
                          <span class="random">Meal of the Day</span>
                          <img src="${mealData.strMealThumb}" alt="${mealData.strMeal}">
@@ -39,7 +41,101 @@ function addMeal(mealData)
                             </button>
                          </div>`;
 
+
+let favoriteButton = meal.querySelector(".fav-btn");
+favoriteButton.addEventListener("click", ()=> {
+    if(favoriteButton.classList.contains('active'))
+{
+    //To deactivate the button make the color grey 
+    favoriteButton.classList.remove('active');
+    removeMealFromLocalStorage(mealData.idMeal);
+}
+else
+{
+    //we need to activate the button by making the color red
+    favoriteButton.classList.add('active')
+    addMealToLocalStorage(mealData.idMeal);
+}
+
+    updateFavoriteMeals()
+});
+
 mealsElement.appendChild(meal);
+}
+
+function addMealToLocalStorage(mealId)
+{
+
+    const mealIds =getMealsFromLocalStorage();
+
+    localStorage.setItem('mealIds',JSON.stringify([...mealIds, mealId]));
+}
+
+function removeMealFromLocalStorage(mealId)
+{
+    const mealIds =getMealsFromLocalStorage(); 
+    localStorage.setItem('mealIds',JSON.stringify(
+        mealIds.filter(id => id!=mealId)
+    ));
+}
+
+function getMealsFromLocalStorage()
+{
+    const mealIds = JSON.parse(localStorage.getItem('mealIds'));
+
+    return mealIds === null? [] : mealIds
+}
+
+async function updateFavoriteMeals()
+{
+    favoritesElement.innerHTML = "";
+    const mealIds = getMealsFromLocalStorage();
+
+    for (let i=0; i<mealIds.length; i++)
+    {
+        let tmpMeal = await getMealByID(mealIds[i]);
+
+        addMealToFavorites(tmpMeal);
+    }
+}
+
+async function getMealByID(id)
+{
+    
+    const resp = await fetch('https://www.themealdb.com/api/json/v1/1/lookup.php?i=' + id);
+    
+    const respData = await resp.json();
+   
+    const meal = respData.meals && respData.meals.length > 0 ? respData.meals[0] : null;
+    //console.log(meal);
+
+    return meal
+    
+}
+
+    function addMealToFavorites(mealData)
+{
+
+    const favoriteMeal = document.createElement('li');
+    favoriteMeal.innerHTML = `
+                <img id="fav-img" 
+                    src="${mealData.strMealThumb}" 
+                     alt="${mealData.strMealThumb}">
+                <span>${mealData.strMealThumb}</span>
+                <button class="clear"><i class="fas fa-window-close"></i></button>`
+
+    const clearBtn = favoriteMeal.querySelector('.clear');
+    clearBtn.addEventListener("click", ()=>{
+        removeMealFromLocalStorage(mealData.idMeal);
+        updateFavoriteMeals();
+    })           
+    favoritesElement.appendChild(favoriteMeal);
 
 }
+
+
+
+
+
+
 
