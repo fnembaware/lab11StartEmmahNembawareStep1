@@ -9,8 +9,29 @@
 
 const mealsElement = document.getElementById('meals');
 const favoritesElement = document.querySelector('.favorites');
+const searchBtn = document.querySelector('#search');
+const searchTerm = document.querySelector('#search-term');
+
 getRandomMeal();
 updateFavoriteMeals();
+
+searchBtn.addEventListener('click', async()=>{
+
+    mealsElement.innerHTML = "";
+
+    const searchWord = searchTerm.value;
+
+    const meals = await getMealBySearch(searchWord);
+    
+    if (meals)
+    {
+        for(let i = 0; i< meals.length; i++ )
+        {
+            addMeal(meals[i]);
+        }
+    }
+})
+
 
 async function getRandomMeal()
 {
@@ -22,16 +43,19 @@ async function getRandomMeal()
     console.log(randomMeal);
 
     mealsElement.innerHTML = "";
-    addMeal(randomMeal);   
+    addMeal(randomMeal, true);   
+
 }
 
-function addMeal(mealData)
+function addMeal(mealData, random = false)
 {
     const meal = document.createElement("div");
     meal.classList.add("meal");
 
     meal.innerHTML = ` <div class="meal-header">
-                         <span class="random">Meal of the Day</span>
+                            ${
+                        random? `<span class="random">Meal of the Day</span>`:""
+                            }
                          <img src="${mealData.strMealThumb}" alt="${mealData.strMeal}">
                         </div>
                         <div class="meal-body">
@@ -133,7 +157,17 @@ async function getMealByID(id)
 
 }
 
+async function getMealBySearch(term)
+{
+    const resp = await fetch('https://www.themealdb.com/api/json/v1/1/search.php?s=' + term);
+    
+    const respData =await resp.json();
+   
+    const meals = respData.meals;
 
+    //console.log(meals);
+    return meals;
+}
 
 
 
