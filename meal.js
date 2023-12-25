@@ -12,6 +12,8 @@ const favoritesElement = document.querySelector('.favorites');
 const searchBtn = document.querySelector('#search');
 const searchTerm = document.querySelector('#search-term');
 
+function initMain ()
+{
 getRandomMeal();
 updateFavoriteMeals();
 
@@ -31,7 +33,7 @@ searchBtn.addEventListener('click', async()=>{
         }
     }
 })
-
+}
 
 async function getRandomMeal()
 {
@@ -65,7 +67,6 @@ function addMeal(mealData, random = false)
                             </button>
                          </div>`;
 
-
 let favoriteButton = meal.querySelector(".fav-btn");
 favoriteButton.addEventListener("click", ()=> {
     if(favoriteButton.classList.contains('active'))
@@ -85,6 +86,12 @@ else
 });
 
 mealsElement.appendChild(meal);
+
+const mealHeader = meal.querySelector(".meal-header");
+mealHeader.addEventListener('click', () =>{
+    openMealDetailsPage(mealData);
+});
+
 }
 
 function addMealToLocalStorage(mealId)
@@ -122,7 +129,6 @@ async function updateFavoriteMeals()
         addMealToFavorites(tmpMeal);
     }
 }
-
 async function getMealByID(id)
 {
     
@@ -152,8 +158,14 @@ async function getMealByID(id)
     clearBtn.addEventListener("click", ()=>{
         removeMealFromLocalStorage(mealData.idMeal);
         updateFavoriteMeals();
-    })           
+    });           
     favoritesElement.appendChild(favoriteMeal);
+
+    const favId = favoriteMeal.querySelector("#fav-img");
+    favId.addEventListener('click', () =>{
+        openMealDetailsPage(mealData);
+
+    })
 
 }
 
@@ -165,11 +177,46 @@ async function getMealBySearch(term)
    
     const meals = respData.meals;
 
-    //console.log(meals);
     return meals;
 }
 
+function openMealDetailsPage(mealData)
+{
+    window.open("details.html?mealId="+ mealData.idMeal, "_self")
+}
 
 
+function initDetailsPage()
+{
+    const urlParams = new URLSearchParams(window.location.search);
+    //console.log(window.location.href);
+    const mealId = urlParams.get('mealId');
+   // console.log(mealId);
 
+    showMealDetails(mealId);
+}
+
+async function showMealDetails(mealId)
+{
+    let tmpMeal = await getMealByID(mealId);
+    console.log(tmpMeal);
+
+    const mealDetailsContainer = document.querySelector('.meal-container');
+
+    mealDetailsContainer.innerHTML = `<a href="meal.html">Home</a>
+    <div class="meal-info">
+        <div>
+            <h1>${tmpMeal.strMeal}</h1>
+            <img src="${tmpMeal.strMealThumb}" alt="$tmpMeal.strMeal">
+        </div>
+        <div>
+            <p>${tmpMeal.strInstructions}</p>
+                <ul>
+                    <li>Ingredient /measure</li>
+                    <li>Ingredient /measure</li>
+                    <li>Ingredient /measure</li>
+                </ul>
+        </div>
+    </div>`;
+}
 
